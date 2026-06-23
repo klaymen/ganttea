@@ -1,0 +1,6 @@
+*.html
+__pycache__/
+.venv/
+.DS_Store
+*.xlsx
+!test_input.xlsx

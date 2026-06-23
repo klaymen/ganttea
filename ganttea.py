@@ -28,10 +28,10 @@ def parse_date(value) -> date | None:
     if isinstance(value, date):
         return value
     if isinstance(value, str):
-        text = value.strip()
+        text = value.strip().rstrip(".")
         if not text:
             return None
-        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"):
+        for fmt in ("%Y-%m-%d", "%Y.%m.%d", "%d/%m/%Y", "%m/%d/%Y", "%d.%m.%Y", "%Y/%m/%d"):
             try:
                 return datetime.strptime(text, fmt).date()
             except ValueError:
@@ -163,9 +163,9 @@ def build_html(tasks: list[dict], title: str) -> str:
       --bar-text: #ffffff;
       --toggle-bg: #e2e8f0;
       --toggle-text: #334155;
-      --sidebar-width: 210px;
-      --row-height: 26px;
-      --header-height: 44px;
+      --sidebar-width: 280px;
+      --row-height: 1.8rem;
+      --header-height: 4rem;
     }}
 
     [data-theme="dark"] {{
@@ -182,6 +182,48 @@ def build_html(tasks: list[dict], title: str) -> str:
       --toggle-text: #cbd5e1;
     }}
 
+    [data-theme="ocean"] {{
+      --bg: #0d1b2a;
+      --panel: #112236;
+      --panel-muted: #0d1b2a;
+      --text: #cce7ff;
+      --muted: #5b9ec9;
+      --border: #1a3a55;
+      --grid: rgba(91, 158, 201, 0.08);
+      --shadow: rgba(0, 0, 0, 0.4);
+      --bar-text: #ffffff;
+      --toggle-bg: #1a3a55;
+      --toggle-text: #cce7ff;
+    }}
+
+    [data-theme="forest"] {{
+      --bg: #f0f7f0;
+      --panel: #ffffff;
+      --panel-muted: #f4faf4;
+      --text: #1a2e1a;
+      --muted: #4a7c59;
+      --border: #c5dfc5;
+      --grid: rgba(74, 124, 89, 0.07);
+      --shadow: rgba(26, 46, 26, 0.07);
+      --bar-text: #ffffff;
+      --toggle-bg: #dceedd;
+      --toggle-text: #1a2e1a;
+    }}
+
+    [data-theme="sunset"] {{
+      --bg: #1a0a0f;
+      --panel: #2a1018;
+      --panel-muted: #1a0a0f;
+      --text: #fce8d8;
+      --muted: #c47f6a;
+      --border: #3d1a22;
+      --grid: rgba(196, 127, 106, 0.08);
+      --shadow: rgba(0, 0, 0, 0.45);
+      --bar-text: #ffffff;
+      --toggle-bg: #3d1a22;
+      --toggle-text: #fce8d8;
+    }}
+
     * {{ box-sizing: border-box; }}
 
     body {{
@@ -189,7 +231,7 @@ def build_html(tasks: list[dict], title: str) -> str:
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
-      font-size: 12px;
+      font-size: 18px;
       line-height: 1.35;
     }}
 
@@ -236,14 +278,20 @@ def build_html(tasks: list[dict], title: str) -> str:
       background: var(--toggle-bg);
       color: var(--toggle-text);
       border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.75rem;
+      padding: 5px 9px;
+      font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
+      transition: filter 0.15s;
     }}
 
     .theme-toggle:hover {{
-      filter: brightness(1.05);
+      filter: brightness(1.08);
+    }}
+
+    .theme-toggle.active {{
+      outline: 2px solid var(--muted);
+      outline-offset: 1px;
     }}
 
     .legend {{
@@ -318,9 +366,18 @@ def build_html(tasks: list[dict], title: str) -> str:
       border-left: 1px solid var(--border);
     }}
 
+    .timeline-separator {{
+      position: absolute;
+      top: 1.8rem;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+    }}
+
     .month-label {{
       position: absolute;
-      top: 8px;
+      top: 0.4rem;
       font-size: 0.68rem;
       font-weight: 600;
       color: var(--text);
@@ -330,10 +387,29 @@ def build_html(tasks: list[dict], title: str) -> str:
 
     .tick {{
       position: absolute;
-      bottom: 0;
+      top: 1.1rem;
       width: 1px;
-      height: 10px;
+      height: 0.7rem;
       background: var(--border);
+    }}
+
+    .day-label {{
+      position: absolute;
+      top: 2.1rem;
+      font-size: 0.60rem;
+      font-weight: 500;
+      color: var(--muted);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }}
+
+    .day-tick {{
+      position: absolute;
+      top: 3rem;
+      width: 1px;
+      height: 0.8rem;
+      background: var(--border);
+      opacity: 0.5;
     }}
 
     .section-label {{
@@ -359,7 +435,7 @@ def build_html(tasks: list[dict], title: str) -> str:
     }}
 
     .person-name {{
-      padding: 4px 10px;
+      padding: 0 10px;
       font-weight: 700;
       font-size: 0.75rem;
       display: flex;
@@ -398,7 +474,7 @@ def build_html(tasks: list[dict], title: str) -> str:
 
     .task-label,
     .milestone-label-cell {{
-      padding: 3px 10px 3px 18px;
+      padding: 0 10px 0 18px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -429,8 +505,9 @@ def build_html(tasks: list[dict], title: str) -> str:
 
     .bar {{
       position: absolute;
-      top: 5px;
-      height: 16px;
+      top: 0.2rem;
+      bottom: 0.2rem;
+      height: auto;
       border-radius: 3px;
       display: flex;
       align-items: center;
@@ -466,6 +543,33 @@ def build_html(tasks: list[dict], title: str) -> str:
       z-index: 2;
     }}
 
+    .gantt-tooltip {{
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      box-shadow: 0 4px 16px var(--shadow);
+      display: none;
+      max-width: 240px;
+    }}
+
+    .gantt-tooltip-title {{
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: var(--text);
+    }}
+
+    .gantt-tooltip-dates {{
+      font-size: 0.70rem;
+      color: var(--muted);
+      white-space: pre-line;
+      line-height: 1.5;
+    }}
+
     .footer {{
       margin-top: 8px;
       color: var(--muted);
@@ -478,9 +582,14 @@ def build_html(tasks: list[dict], title: str) -> str:
     <div class="header">
       <div class="header-left">
         <h1 id="chart-title"></h1>
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">Dark mode</button>
       </div>
       <div class="controls">
+        <div id="theme-switcher" role="group" aria-label="Color scheme" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+        <div id="font-size-control" style="display:flex;align-items:center;gap:4px">
+          <button class="theme-toggle" id="fs-down" type="button" aria-label="Decrease font size">A−</button>
+          <span id="fs-label" style="font-size:0.72rem;font-weight:600;color:var(--muted);min-width:28px;text-align:center"></span>
+          <button class="theme-toggle" id="fs-up"   type="button" aria-label="Increase font size">A+</button>
+        </div>
         <div class="legend" id="legend"></div>
       </div>
     </div>
@@ -494,6 +603,8 @@ def build_html(tasks: list[dict], title: str) -> str:
 
   <script>
     const DATA = {data_json};
+
+    let tooltip = null;
 
     function parseDate(value) {{
       const [year, month, day] = value.split("-").map(Number);
@@ -530,6 +641,27 @@ def build_html(tasks: list[dict], title: str) -> str:
       return DATA.typeStyles[typeName] || DATA.defaultTypeStyle;
     }}
 
+    const PERSON_PALETTE = [
+      "#e63946", // vivid red
+      "#2a9d8f", // teal
+      "#f4a261", // warm orange
+      "#457b9d", // steel blue
+      "#9b5de5", // purple
+      "#06d6a0", // mint
+      "#fb5607", // deep orange
+      "#3a86ff", // bright blue
+      "#ff006e", // hot pink
+      "#8ac926", // lime green
+    ];
+
+    function buildPersonColors(people) {{
+      const map = {{}};
+      Object.keys(people).forEach((person, i) => {{
+        map[person] = PERSON_PALETTE[i % PERSON_PALETTE.length];
+      }});
+      return map;
+    }}
+
     function isMilestone(task) {{
       return task.is_milestone === true || String(task.type || "").toLowerCase() === "milestone";
     }}
@@ -542,16 +674,40 @@ def build_html(tasks: list[dict], title: str) -> str:
       labels.className = "timeline-labels";
       labels.style.setProperty("--week-count", weekCount);
 
+      const separator = document.createElement("div");
+      separator.className = "timeline-separator";
+      labels.appendChild(separator);
+
+      const pxPerDay = width / totalDays;
+      let dayInterval = 0;
+      if (pxPerDay >= 8) dayInterval = 7;
+      else if (pxPerDay >= 4) dayInterval = 14;
+      else if (pxPerDay >= 2) dayInterval = 28;
+
+      // Collect month-start pixel positions so day labels can avoid them
+      const monthStartPx = [];
       let cursor = startOfMonth(minDate);
       const endLimit = endOfMonth(maxDate);
 
       while (cursor <= endLimit) {{
         const offsetDays = dayDiff(minDate, cursor);
         const left = (offsetDays / totalDays) * width;
+
+        // Advance cursor first so we can use continue cleanly
+        const thisMonth = cursor;
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+
+        // Skip months that start before the visible range
+        if (offsetDays < 0) continue;
+
+        monthStartPx.push(left);
+
         const label = document.createElement("div");
         label.className = "month-label";
         label.style.left = `${{left}}px`;
-        label.textContent = cursor.toLocaleDateString(undefined, {{
+        // If the label sits at the very left edge, anchor it there instead of centering
+        if (left < 2) label.style.transform = "none";
+        label.textContent = thisMonth.toLocaleDateString(undefined, {{
           month: "short",
           year: "2-digit",
         }});
@@ -561,8 +717,30 @@ def build_html(tasks: list[dict], title: str) -> str:
         tick.className = "tick";
         tick.style.left = `${{left}}px`;
         labels.appendChild(tick);
+      }}
 
-        cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+      if (dayInterval > 0) {{
+        const clearance = pxPerDay * dayInterval * 0.55;
+        for (let d = 0; ; d += dayInterval) {{
+          const date = addDays(minDate, d);
+          if (date > maxDate) break;
+          const left = (d / totalDays) * width;
+
+          // Skip day labels that sit too close to a month-start tick
+          const tooClose = monthStartPx.some(mx => Math.abs(left - mx) < clearance);
+          if (tooClose) continue;
+
+          const dayLabel = document.createElement("div");
+          dayLabel.className = "day-label";
+          dayLabel.style.left = `${{left}}px`;
+          dayLabel.textContent = date.getDate();
+          labels.appendChild(dayLabel);
+
+          const dayTick = document.createElement("div");
+          dayTick.className = "day-tick";
+          dayTick.style.left = `${{left}}px`;
+          labels.appendChild(dayTick);
+        }}
       }}
 
       return {{ labels, totalDays, weekCount }};
@@ -581,7 +759,7 @@ def build_html(tasks: list[dict], title: str) -> str:
       return track;
     }}
 
-    function renderBar(task, track, minDate, timeline, trackWidth) {{
+    function renderBar(task, track, minDate, timeline, trackWidth, personColor) {{
       const style = getTypeStyle(task.type);
       const start = parseDate(task.start);
       const end = parseDate(task.end);
@@ -600,8 +778,10 @@ def build_html(tasks: list[dict], title: str) -> str:
       bar.className = "bar" + (typeKey === "holiday" ? " holiday" : "");
       bar.style.left = `${{left}}px`;
       bar.style.width = `${{width}}px`;
-      bar.style.backgroundColor = style.color;
-      bar.title = `${{task.task}}: ${{formatDate(start)}} – ${{formatDate(end)}}`;
+      bar.style.backgroundColor = (typeKey === "task" && personColor) ? personColor : style.color;
+      bar.addEventListener("mouseenter", (e) => tooltip.show(e, task.task, `Start: ${{formatDate(start)}}\nEnd:   ${{formatDate(end)}}`));
+      bar.addEventListener("mousemove", (e) => tooltip.move(e));
+      bar.addEventListener("mouseleave", () => tooltip.hide());
       if (width >= 36) {{
         bar.textContent = task.task;
       }}
@@ -621,11 +801,13 @@ def build_html(tasks: list[dict], title: str) -> str:
       marker.className = "milestone-marker";
       marker.style.left = `${{left}}px`;
       marker.style.background = style.color;
-      marker.title = `${{task.task}} · ${{formatDate(start)}}`;
+      marker.addEventListener("mouseenter", (e) => tooltip.show(e, task.task, `Date: ${{formatDate(start)}}`));
+      marker.addEventListener("mousemove", (e) => tooltip.move(e));
+      marker.addEventListener("mouseleave", () => tooltip.hide());
       track.appendChild(marker);
     }}
 
-    function renderPersonGroup(person, tasks, minDate, timeline, trackWidth) {{
+    function renderPersonGroup(person, tasks, minDate, timeline, trackWidth, personColor) {{
       const group = document.createElement("div");
       group.className = "person-group";
 
@@ -635,6 +817,11 @@ def build_html(tasks: list[dict], title: str) -> str:
       const personName = document.createElement("div");
       personName.className = "person-name";
       personName.textContent = person;
+      if (personColor) {{
+        personName.style.color = personColor;
+        personName.style.borderLeft = `3px solid ${{personColor}}`;
+        personName.style.paddingLeft = `7px`;
+      }}
 
       const personTrack = createTrack("person-track", trackWidth, timeline.weekCount);
       personRow.appendChild(personName);
@@ -664,7 +851,7 @@ def build_html(tasks: list[dict], title: str) -> str:
         label.appendChild(badge);
 
         const track = createTrack("task-track", trackWidth, timeline.weekCount);
-        renderBar(task, track, minDate, timeline, trackWidth);
+        renderBar(task, track, minDate, timeline, trackWidth, personColor);
 
         row.appendChild(label);
         row.appendChild(track);
@@ -718,25 +905,103 @@ def build_html(tasks: list[dict], title: str) -> str:
 
     function initTheme() {{
       const root = document.documentElement;
-      const toggle = document.getElementById("theme-toggle");
+      const switcher = document.getElementById("theme-switcher");
       const stored = localStorage.getItem("ganttea-theme");
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const theme = stored || (prefersDark ? "dark" : "light");
+      const defaultTheme = stored || (prefersDark ? "dark" : "light");
 
-      function applyTheme(value) {{
-        root.setAttribute("data-theme", value === "dark" ? "dark" : "light");
-        toggle.textContent = value === "dark" ? "Light mode" : "Dark mode";
-        localStorage.setItem("ganttea-theme", value);
+      const schemes = [
+        {{ id: "light",  label: "Light"  }},
+        {{ id: "dark",   label: "Dark"   }},
+        {{ id: "ocean",  label: "Ocean"  }},
+        {{ id: "forest", label: "Forest" }},
+        {{ id: "sunset", label: "Sunset" }},
+      ];
+
+      function applyTheme(id) {{
+        root.setAttribute("data-theme", id);
+        localStorage.setItem("ganttea-theme", id);
+        switcher.querySelectorAll(".theme-toggle").forEach(btn => {{
+          btn.classList.toggle("active", btn.dataset.theme === id);
+        }});
       }}
 
-      applyTheme(theme);
-      toggle.addEventListener("click", () => {{
-        const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        applyTheme(next);
+      schemes.forEach(scheme => {{
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "theme-toggle";
+        btn.dataset.theme = scheme.id;
+        btn.textContent = scheme.label;
+        btn.addEventListener("click", () => applyTheme(scheme.id));
+        switcher.appendChild(btn);
       }});
+
+      applyTheme(defaultTheme);
+    }}
+
+    function initFontSize() {{
+      const SIZES = [10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32];
+      const DEFAULT = 18;
+      const KEY = "ganttea-fontsize";
+      const root = document.documentElement;
+      const label = document.getElementById("fs-label");
+
+      let current = parseInt(localStorage.getItem(KEY), 10);
+      if (!SIZES.includes(current)) current = DEFAULT;
+
+      function apply(size) {{
+        current = size;
+        root.style.fontSize = size + "px";
+        label.textContent = size + "px";
+        localStorage.setItem(KEY, size);
+        document.getElementById("fs-down").disabled = size <= SIZES[0];
+        document.getElementById("fs-up").disabled  = size >= SIZES[SIZES.length - 1];
+      }}
+
+      document.getElementById("fs-down").addEventListener("click", () => {{
+        const idx = SIZES.indexOf(current);
+        if (idx > 0) apply(SIZES[idx - 1]);
+      }});
+      document.getElementById("fs-up").addEventListener("click", () => {{
+        const idx = SIZES.indexOf(current);
+        if (idx < SIZES.length - 1) apply(SIZES[idx + 1]);
+      }});
+
+      apply(current);
+    }}
+
+    function setupTooltip() {{
+      const el = document.createElement("div");
+      el.className = "gantt-tooltip";
+      el.innerHTML = '<div class="gantt-tooltip-title"></div><div class="gantt-tooltip-dates"></div>';
+      document.body.appendChild(el);
+
+      function show(e, title, dateText) {{
+        el.querySelector(".gantt-tooltip-title").textContent = title;
+        el.querySelector(".gantt-tooltip-dates").textContent = dateText;
+        el.style.display = "block";
+        move(e);
+      }}
+
+      function move(e) {{
+        const gap = 14;
+        let x = e.clientX + gap;
+        let y = e.clientY - el.offsetHeight - gap;
+        if (x + el.offsetWidth > window.innerWidth - 8) x = e.clientX - el.offsetWidth - gap;
+        if (y < 8) y = e.clientY + gap;
+        el.style.left = `${{x}}px`;
+        el.style.top = `${{y}}px`;
+      }}
+
+      function hide() {{
+        el.style.display = "none";
+      }}
+
+      return {{ show, move, hide }};
     }}
 
     function render() {{
+      tooltip = setupTooltip();
       const minDate = parseDate(DATA.minDate);
       const maxDate = parseDate(DATA.maxDate);
       const chart = document.getElementById("chart");
@@ -775,8 +1040,9 @@ def build_html(tasks: list[dict], title: str) -> str:
       header.appendChild(timeline.labels);
       chart.appendChild(header);
 
+      const personColors = buildPersonColors(DATA.people);
       Object.entries(DATA.people).forEach(([person, tasks]) => {{
-        chart.appendChild(renderPersonGroup(person, tasks, minDate, timeline, trackWidth));
+        chart.appendChild(renderPersonGroup(person, tasks, minDate, timeline, trackWidth, personColors[person]));
       }});
 
       const milestonesSection = renderMilestonesSection(DATA.milestones || [], minDate, timeline, trackWidth);
@@ -785,6 +1051,7 @@ def build_html(tasks: list[dict], title: str) -> str:
       }}
 
       initTheme();
+      initFontSize();
     }}
 
     render();
